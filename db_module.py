@@ -95,6 +95,14 @@ def user_set_status(user_id, status):
     con.close()
 
 
+def update_last_interaction(user_id, last_iteraion):
+    con = db_connect()
+    cur = con.cursor()
+    cur.execute("UPDATE user SET last_interaction = ? WHERE user_id = ?", (last_iteraion, user_id))
+    con.commit()
+    con.close()
+
+
 def check_date(date):
     """Получает текущее действие пользователя."""
     con = db_connect()

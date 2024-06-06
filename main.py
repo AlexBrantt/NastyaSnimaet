@@ -20,7 +20,7 @@ from db_module import (user_create, user_exist,
                        delete_order, delete_review,
                        get_project_by_name, edit_project,
                        delete_project, user_get_select,
-                       user_set_select,)
+                       user_set_select, update_last_interaction,)
 
 from buttons import (buttons_name, main_menu_admin,
                      main_menu_user, delete_menu,
@@ -29,6 +29,8 @@ from buttons import (buttons_name, main_menu_admin,
                      get_project_menu, project_edit,
                      cancel_edit_proj, delete_confirm_menu,)
 
+from validators import date_validator
+
 from messages import messages_dict
 
 load_dotenv()
@@ -36,6 +38,7 @@ load_dotenv()
 TOKEN = os.getenv('TOKEN')
 NASTYA_ID = os.getenv('NASTYA_ID')
 ALEX = os.getenv('ALEX_ID')
+DEBUG_ADMIN = 'root'
 
 default_timezone = pytz.timezone('Europe/Kaliningrad')
 datetime.datetime.now(default_timezone)
@@ -87,12 +90,25 @@ def message_handler(message):
     chat_id = message.chat.id
     user_id = message.from_user.id
     username = message.from_user.username
+    last_interaction = datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")
+    update_last_interaction(user_id, last_interaction)
 
     # Проверка на админку и установка нужного меню
-    if user_get_status(user_id) == 'admin':
+    if check_admin(user_id):
         main_menu = main_menu_admin
     else:
         main_menu = main_menu_user
+
+    if text == DEBUG_ADMIN:
+        if check_admin(user_id):
+            user_set_status(user_id, 'user')
+            bot.send_message(chat_id, 'С вас сняты права админа',
+                             reply_markup=main_menu_user)
+        else:
+            user_set_status(user_id, 'admin')
+            bot.send_message(chat_id, 'Вы стали админом',
+                             reply_markup=main_menu_admin)
+        return
 
     # Команда Прайс
     if text == buttons_name['price']:
@@ -141,14 +157,14 @@ def message_handler(message):
 
     # Команда перехода в админ меню
     elif text == buttons_name['admin']:
-        if not check_admin:
+        if not check_admin(user_id):
             return
         bot.send_message(chat_id, messages_dict['admin'],
                          reply_markup=admin_menu)
 
     # Команда добавить проект
     elif text == buttons_name['add_proj']:
-        if not check_admin:
+        if not check_admin(user_id):
             return
         bot.send_message(chat_id, messages_dict['add_proj'],
                          reply_markup=cancel_menu)
@@ -156,7 +172,7 @@ def message_handler(message):
 
     # Команда получения всех активных заявок
     elif text == buttons_name['get_orders']:
-        if not check_admin:
+        if not check_admin(user_id):
             return
         orders = get_orders()
         order_list = ''
@@ -169,7 +185,7 @@ def message_handler(message):
 
     # Команда получения отзывов
     elif text == buttons_name['get_reviews']:
-        if not check_admin:
+        if not check_admin(user_id):
             return
         reviews = get_reviews()
         rev_list = ''
@@ -181,31 +197,35 @@ def message_handler(message):
         bot.send_message(chat_id, msg)
 
     elif text == buttons_name['delete_menu']:
+        if not check_admin(user_id):
+            return
         bot.send_message(chat_id, messages_dict['delete_menu'],
                          reply_markup=delete_menu)
 
     elif text == buttons_name['cancel_admin']:
-        if not check_admin:
+        if not check_admin(user_id):
             return
         user_set_action(user_id, 'menu')
         bot.send_message(chat_id, messages_dict['cancel_admin'],
                          reply_markup=admin_menu)
 
     elif text == buttons_name['delete_order']:
-        if not check_admin:
+        if not check_admin(user_id):
             return
         bot.send_message(chat_id, messages_dict['delete_order'],
                          reply_markup=cancel_menu_admin)
         user_set_action(user_id, 'delete_order')
 
     elif text == buttons_name['delete_review']:
-        if not check_admin:
+        if not check_admin(user_id):
             return
         bot.send_message(chat_id, messages_dict['delete_review'],
                          reply_markup=cancel_menu_admin)
         user_set_action(user_id, 'delete_review')
 
     elif text == buttons_name['projects_menu']:
+        if not check_admin(user_id):
+            return
         projects_menu = get_project_menu()
         bot.send_message(chat_id, 'Меню проектов',
                          reply_markup=projects_menu)
@@ -213,47 +233,65 @@ def message_handler(message):
 
     # Обработка изменения проекта
     elif text == buttons_name['edit_proj_name']:
+        if not check_admin(user_id):
+            return
         bot.send_message(chat_id, 'Введите новое название',
                          reply_markup=cancel_edit_proj)
         user_set_action(user_id, 'edit_proj_name')
 
     elif text == buttons_name['edit_proj_price']:
+        if not check_admin(user_id):
+            return
         bot.send_message(chat_id, 'Введите цену',
                          reply_markup=cancel_edit_proj)
         user_set_action(user_id, 'edit_proj_price')
 
     elif text == buttons_name['edit_proj_customer']:
+        if not check_admin(user_id):
+            return
         bot.send_message(chat_id, 'Введите логин заказчика',
                          reply_markup=cancel_edit_proj)
         user_set_action(user_id, 'edit_proj_customer')
 
     elif text == buttons_name['edit_proj_status']:
+        if not check_admin(user_id):
+            return
         bot.send_message(chat_id, 'Введите новый статус',
                          reply_markup=cancel_edit_proj)
         user_set_action(user_id, 'edit_proj_status')
 
     elif text == buttons_name['edit_proj_date']:
+        if not check_admin(user_id):
+            return
         bot.send_message(chat_id, 'Введите дату',
                          reply_markup=cancel_edit_proj)
         user_set_action(user_id, 'edit_proj_date')
 
     elif text == buttons_name['edit_proj_time']:
+        if not check_admin(user_id):
+            return
         bot.send_message(chat_id, 'Введите время',
                          reply_markup=cancel_edit_proj)
         user_set_action(user_id, 'edit_proj_time')
 
     elif text == buttons_name['delete_proj']:
+        if not check_admin(user_id):
+            return
         bot.send_message(chat_id, 'Подтвердите удаление',
                          reply_markup=delete_confirm_menu)
         user_set_action(user_id, 'delete_proj')
 
     elif text == buttons_name['cancel_edit_proj']:
+        if not check_admin(user_id):
+            return
         proj_menu = get_project_menu()
         bot.send_message(chat_id, 'Отменено',
                          reply_markup=proj_menu)
         user_set_action(user_id, 'project_edit')
         
     elif text == buttons_name['confirm_delete_proj']:
+        if not check_admin(user_id):
+            return
         delete_project(user_get_select(user_id))
         proj_menu = get_project_menu()
         bot.send_message(chat_id, 'Проект успешно удален',
@@ -267,7 +305,7 @@ def message_handler(message):
 
         # Обработка ввода для добавления проекта
         if action == 'admin_add_project':
-            if not check_admin:
+            if not check_admin(user_id):
                 return
             try:
                 parts = shlex.split(text)
@@ -276,17 +314,22 @@ def message_handler(message):
                 price = int(parts[2]) if len(parts) > 2 else None
                 date = parts[3] if len(parts) > 3 else None
                 time_range = parts[4] if len(parts) > 4 else None
-                data = (
-                        project_name,
-                        price,
-                        customer.replace('@', '') if customer is not None else None,
-                        date,
-                        time_range
-                    )
-                project_create(data)
-                user_set_action(user_id, 'menu')
-                bot.send_message(chat_id, messages_dict['proj_added'],
-                                 reply_markup=main_menu)
+
+                valid_date = date_validator(date)
+                if valid_date:
+                    data = (
+                            project_name,
+                            price,
+                            customer.replace('@', '') if customer is not None else None,
+                            valid_date,
+                            time_range
+                        )
+                    project_create(data)
+                    user_set_action(user_id, 'menu')
+                    bot.send_message(chat_id, messages_dict['proj_added'],
+                                     reply_markup=main_menu)
+                else:
+                    bot.send_message(chat_id, messages_dict['check_date_error'])
             except IndexError:
                 err_msg = "Ошибка: недостаточно аргументов в введенной строке."
                 bot.send_message(chat_id, err_msg,
@@ -297,7 +340,7 @@ def message_handler(message):
 
         # Обработка ввода проверки даты
         elif action == 'check_date':
-            try:
+            if date_validator(text):
                 dates = check_date(text)
                 if dates:
                     sorted_times = sorted([time[0] for time in dates],
@@ -309,9 +352,9 @@ def message_handler(message):
                     bot.send_message(chat_id, messages_dict['check_date_free'],
                                      reply_markup=main_menu)
                 user_set_action(user_id, 'menu')
-            except ValueError:
+            else:
                 msg = messages_dict['check_date_error']
-                bot.send_message(chat_id, msg, reply_markup=main_menu)
+                bot.send_message(chat_id, msg)
 
         # Обработка ввода отправки заявки
         elif action == 'send_order':
@@ -337,9 +380,10 @@ def message_handler(message):
             user_set_action(user_id, 'menu')
 
         elif action == 'delete_order':
-            if not check_admin:
+            if not check_admin(user_id):
                 return
-            if delete_order(text):
+            customer = text.replace('@', '')
+            if delete_order(customer):
                 msg = f'Заяки пользователя {text} удалены'
                 bot.send_message(chat_id, msg, reply_markup=admin_menu)
             else:
@@ -347,9 +391,10 @@ def message_handler(message):
                 bot.send_message(chat_id, msg)
 
         elif action == 'delete_review':
-            if not check_admin:
+            if not check_admin(user_id):
                 return
-            if delete_review(text):
+            customer = text.replace('@', '')
+            if delete_review(customer):
                 msg = f'Отзывы пользователя {text} удалены'
                 bot.send_message(chat_id, msg, reply_markup=admin_menu)
             else:
@@ -357,6 +402,8 @@ def message_handler(message):
                 bot.send_message(chat_id, msg)
 
         elif action == 'project_edit':
+            if not check_admin(user_id):
+                return
             project = get_project_by_name(text)
             if project:
                 id = project[0]
@@ -381,6 +428,8 @@ def message_handler(message):
 
         # редактирование проекта
         elif action == 'edit_proj_name':
+            if not check_admin(user_id):
+                return
             try:
                 edit_project('name', proj_select, text)
                 msg = 'Проект успешно отредактирован👌🏻'
@@ -391,6 +440,8 @@ def message_handler(message):
                 bot.send_message(chat_id, msg, reply_markup=project_edit)
 
         elif action == 'edit_proj_status':
+            if not check_admin(user_id):
+                return
             try:
                 edit_project('status', proj_select, text)
                 msg = 'Проект успешно отредактирован👌🏻'
@@ -401,6 +452,8 @@ def message_handler(message):
                 bot.send_message(chat_id, msg, reply_markup=project_edit)
         
         elif action == 'edit_proj_price':
+            if not check_admin(user_id):
+                return
             try:
                 edit_project('price', proj_select, text)
                 msg = 'Проект успешно отредактирован👌🏻'
@@ -411,6 +464,8 @@ def message_handler(message):
                 bot.send_message(chat_id, msg, reply_markup=project_edit)
 
         elif action == 'edit_proj_customer':
+            if not check_admin(user_id):
+                return
             try:
                 edit_project('customer', proj_select, text)
                 msg = 'Проект успешно отредактирован👌🏻'
@@ -421,6 +476,8 @@ def message_handler(message):
                 bot.send_message(chat_id, msg, reply_markup=project_edit)
 
         elif action == 'edit_proj_date':
+            if not check_admin(user_id):
+                return
             try:
                 edit_project('date', proj_select, text)
                 msg = 'Проект успешно отредактирован👌🏻'
@@ -431,6 +488,8 @@ def message_handler(message):
                 bot.send_message(chat_id, msg, reply_markup=project_edit)
 
         elif action == 'edit_proj_time':
+            if not check_admin(user_id):
+                return
             try:
                 edit_project('time', proj_select, text)
                 msg = 'Проект успешно отредактирован👌🏻'
@@ -443,13 +502,17 @@ def message_handler(message):
 
 try:
     bot.polling(none_stop=True, interval=0, timeout=20)
-except urllib3.exceptions.ConnectTimeoutError as e:
-    # Обработка исключения при превышении времени ожидания подключения
-    print("Ошибка подключения к API Telegram:", e)
-    time.sleep(10)  # Задержка перед повторной попыткой
+except (urllib3.exceptions.ConnectionError,
+        urllib3.exceptions.MaxRetryError,
+        urllib3.exceptions.ConnectTimeoutError) as e:
+    print("Произошла ошибка соединения или превышено время ожидания:", e)
+    time.sleep(3)
 except requests.exceptions.ReadTimeout as e:
-    print("Ошибка подключения к API Telegram:", e)
-    time.sleep(10)
+    print("Произошла ошибка при чтении ответа:", e)
+    time.sleep(3)
+except urllib3.exceptions.HTTPError as e:
+    print("Произошла ошибка HTTP:", e)
+    time.sleep(3)
 
 """except Exception as e:
     print(f"Error: {e}")
