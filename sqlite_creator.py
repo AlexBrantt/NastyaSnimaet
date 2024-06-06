@@ -23,19 +23,15 @@ CREATE TABLE IF NOT EXISTS work_schedule (id INTEGER PRIMARY KEY AUTOINCREMENT, 
 '''
 
 query_project = '''
-CREATE TABLE IF NOT EXISTS project (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, price INTEGER, customer TEXT NOT NULL, status TEXT NOT NULL DEFAULT заказ);
+CREATE TABLE IF NOT EXISTS project (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, price INTEGER, customer TEXT, status TEXT DEFAULT заказ, date TEXT, time TEXT);
 '''
 
 query = '''
-CREATE TABLE review (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT,
-            date TEXT,
-            text TEXT
-        );
+DROP TABLE IF EXISTS project;
 '''
+
 # Применяем запросы.
-cur.execute(query)
+cur.execute(query_project)
 # весь скрипт применить...
 # cur.executescript(''' ''')
 # Закрываем соединение с БД.
