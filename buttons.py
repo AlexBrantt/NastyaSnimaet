@@ -4,6 +4,8 @@ from telebot import types
 
 from db_module import get_projects
 
+from messages import project_statuses
+
 buttons_name = {
     'price': 'Прайс ❤️',
     'works': 'Работы 🎥',
@@ -31,9 +33,9 @@ buttons_name = {
     'edit_proj_time': 'Изменить время',
     'cancel_edit_proj': 'Назад',
     'delete_proj': 'Удалить проект 🛑',
-    'confirm_delete_proj': 'Точно удалить ❌'
-    
+    'confirm_delete_proj': 'Точно удалить ❌',
 }
+
 
 main_menu_user = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
 main_menu_user.add(types.KeyboardButton(buttons_name['price']),
@@ -80,6 +82,13 @@ delete_menu.add(types.KeyboardButton(buttons_name['delete_order']),
 delete_confirm_menu = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
 delete_confirm_menu.add(types.KeyboardButton(buttons_name['cancel_edit_proj']),
                         types.KeyboardButton(buttons_name['confirm_delete_proj']))
+
+status_select_menu = types.ReplyKeyboardMarkup(row_width=3, resize_keyboard=True)
+cancel = types.KeyboardButton(buttons_name['cancel_edit_proj'])
+buttons_status = [types.KeyboardButton(status) for status in project_statuses]
+status_select_menu.add(cancel)
+status_select_menu.add(*buttons_status)
+
 
 def get_project_menu():
     projects_menu = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)

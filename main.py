@@ -6,6 +6,8 @@ import time
 import urllib3
 import requests
 import os
+import logging
+from logging.handlers import RotatingFileHandler
 from dotenv import load_dotenv
 
 import pytz
@@ -27,7 +29,8 @@ from buttons import (buttons_name, main_menu_admin,
                      cancel_menu, order_menu,
                      admin_menu, cancel_menu_admin,
                      get_project_menu, project_edit,
-                     cancel_edit_proj, delete_confirm_menu,)
+                     cancel_edit_proj, delete_confirm_menu,
+                     status_select_menu,)
 
 from validators import date_validator
 
@@ -44,6 +47,21 @@ default_timezone = pytz.timezone('Europe/Kaliningrad')
 datetime.datetime.now(default_timezone)
 
 bot = telebot.TeleBot(TOKEN)
+
+# Создаем форматтер для логов
+formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(message)s')
+# Создаем обработчик для записи в файл
+file_handler = RotatingFileHandler("app.log", maxBytes=10*1024*1024,
+                                   backupCount=5, encoding='utf-8')
+"""
+maxBytes- максимальный размер файла (в байтах), при котором произойдет ротация
+backupCount- количество файлов логов, которые будут сохранены после ротации
+"""
+file_handler.setFormatter(formatter)
+# Настраиваем логгер
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+logger.addHandler(file_handler)
 
 
 def get_current_datetime():
@@ -86,12 +104,12 @@ def user_register(message):
 def message_handler(message):
     """Основной обработчик текста."""
     text = message.text
-    print(text)
     chat_id = message.chat.id
     user_id = message.from_user.id
     username = message.from_user.username
     last_interaction = datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")
     update_last_interaction(user_id, last_interaction)
+    logging.info(f'{username}: {text}')
 
     # Проверка на админку и установка нужного меню
     if check_admin(user_id):
@@ -257,7 +275,7 @@ def message_handler(message):
         if not check_admin(user_id):
             return
         bot.send_message(chat_id, 'Введите новый статус',
-                         reply_markup=cancel_edit_proj)
+                         reply_markup=status_select_menu)
         user_set_action(user_id, 'edit_proj_status')
 
     elif text == buttons_name['edit_proj_date']:
@@ -334,9 +352,11 @@ def message_handler(message):
                 err_msg = "Ошибка: недостаточно аргументов в введенной строке."
                 bot.send_message(chat_id, err_msg,
                                  reply_markup=main_menu)
+                logging.info(f'{user_id}: {err_msg}')
             except ValueError:
                 bot.send_message(chat_id, messages_dict['proj_error'],
                                  reply_markup=main_menu)
+                logging.info(f"{user_id}: {messages_dict['proj_error']}")
 
         # Обработка ввода проверки даты
         elif action == 'check_date':
@@ -505,13 +525,16 @@ try:
 except (urllib3.exceptions.ConnectionError,
         urllib3.exceptions.MaxRetryError,
         urllib3.exceptions.ConnectTimeoutError) as e:
-    print("Произошла ошибка соединения или превышено время ожидания:", e)
+    err_msg = "Произошла ошибка соединения или превышено время ожидания:"
+    logging.error(err_msg, e)
     time.sleep(3)
 except requests.exceptions.ReadTimeout as e:
-    print("Произошла ошибка при чтении ответа:", e)
+    err_msg = "Произошла ошибка при чтении ответа:"
+    logging.error(err_msg, e)
     time.sleep(3)
 except urllib3.exceptions.HTTPError as e:
-    print("Произошла ошибка HTTP:", e)
+    err_msg = "Произошла ошибка HTTP:"
+    logging.error(err_msg, e)
     time.sleep(3)
 
 """except Exception as e:

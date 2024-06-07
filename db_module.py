@@ -1,6 +1,7 @@
 """Модуль бд."""
 
 import sqlite3
+import logging
 from messages import project_statuses
 
 
@@ -23,7 +24,7 @@ def user_create(data):
         con.commit()
         print("Данные пользователя успешно вставлены в базу данных.")
     except sqlite3.Error as e:
-        print("Ошибка при вставке данных пользователя:", e)
+        logging.error("Ошибка при вставке данных пользователя:", e)
     finally:
         con.close()
 
@@ -136,7 +137,7 @@ def project_create(data):
         con.commit()
         print("Данные проекта успешно вставлены в базу данных.")
     except sqlite3.Error as e:
-        print("Ошибка при вставке данных проекта:", e)
+        logging.error("Ошибка при вставке данных проекта:", e)
     finally:
         con.close()
 
@@ -186,7 +187,7 @@ def delete_project(id):
 
 
 def review_add(data):
-    """Добавляение проекта в бд."""
+    """Добавляение отзыва в бд."""
     con = db_connect()
     try:
         cur = con.cursor()
@@ -196,9 +197,9 @@ def review_add(data):
             data
         )
         con.commit()
-        print("Данные проекта успешно вставлены в базу данных.")
+        print("Отзыв успешно вставлен в базу данных.")
     except sqlite3.Error as e:
-        print("Ошибка при вставке данных проекта:", e)
+        logging.error("Ошибка при отправке отзыва:", e)
     finally:
         con.close()
 
@@ -214,7 +215,7 @@ def get_reviews():
 
 
 def order_add(data):
-    """Добавляение отзыв в бд."""
+    """Добавляение заказа в бд."""
     con = db_connect()
     try:
         cur = con.cursor()
@@ -224,9 +225,9 @@ def order_add(data):
             data
         )
         con.commit()
-        print("Данные отзыва успешно вставлены в базу данных.")
+        print("Данные заказа успешно вставлены в базу данных.")
     except sqlite3.Error as e:
-        print("Ошибка при вставке данных отзыва:", e)
+        logging.error("Ошибка при вставке данных заказа:", e)
     finally:
         con.close()
 
@@ -279,6 +280,7 @@ def check_user_orders(username):
     result = cur.fetchone()
     con.close()
     return result
+
 
 def check_user_reviews(username):
     """Получает отзывы."""
