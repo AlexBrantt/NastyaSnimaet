@@ -94,6 +94,7 @@ def user_set_status(user_id, status):
     cur.execute("UPDATE user SET status = ? WHERE user_id = ?", (status, user_id))
     con.commit()
     con.close()
+    # logging.info(f'Установлен статус: {status}')
 
 
 def update_last_interaction(user_id, last_iteraion):
@@ -152,6 +153,21 @@ def get_projects():
     result = cur.fetchall()
     con.close()
     return result
+
+
+def get_projects_billing():
+    """Получает доход с активных проектов."""
+    con = db_connect()
+    cur = con.cursor()
+    last_status = project_statuses[-1]
+    query = "SELECT price FROM project WHERE status != ?"
+    cur.execute(query, (last_status,))
+    result = cur.fetchall()
+    con.close()
+    billing = 0
+    for price in result:
+        billing += price[0]
+    return billing
 
 
 def get_project_by_name(name):

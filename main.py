@@ -22,7 +22,8 @@ from db_module import (user_create, user_exist,
                        delete_order, delete_review,
                        get_project_by_name, edit_project,
                        delete_project, user_get_select,
-                       user_set_select, update_last_interaction,)
+                       user_set_select, update_last_interaction,
+                       get_projects_billing,)
 
 from buttons import (buttons_name, main_menu_admin,
                      main_menu_user, delete_menu,
@@ -30,11 +31,13 @@ from buttons import (buttons_name, main_menu_admin,
                      admin_menu, cancel_menu_admin,
                      get_project_menu, project_edit,
                      cancel_edit_proj, delete_confirm_menu,
-                     status_select_menu,)
+                     status_select_menu, price_menu)
 
 from validators import date_validator
 
-from messages import messages_dict
+from messages import messages_dict, price_list
+
+from utils import read_text_file, write_text_file
 
 load_dotenv()
 
@@ -82,7 +85,6 @@ def time_to_minutes(time_str):
     hours, minutes = map(int, start_time.split(':'))
     return hours * 60 + minutes
 
-
 @bot.message_handler(commands=['start'])
 def user_register(message):
     """Добавляение пользователя в бд."""
@@ -109,6 +111,7 @@ def message_handler(message):
     username = message.from_user.username
     last_interaction = datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")
     update_last_interaction(user_id, last_interaction)
+    action = user_get_action(user_id)
     logging.info(f'{username}: {text}')
 
     # Проверка на админку и установка нужного меню
@@ -131,7 +134,12 @@ def message_handler(message):
     # Команда Прайс
     if text == buttons_name['price']:
         bot.send_message(chat_id, messages_dict['price'],
-                         reply_markup=main_menu)
+                         reply_markup=price_menu)
+
+    # Отправить прайс с кнопки
+    elif text in price_list and action == 'menu':
+        price = read_text_file(price_list[text])
+        bot.send_message(chat_id, price)
 
     # Команда Посмотреть работы
     elif text == buttons_name['works']:
@@ -219,6 +227,20 @@ def message_handler(message):
             return
         bot.send_message(chat_id, messages_dict['delete_menu'],
                          reply_markup=delete_menu)
+     
+    elif text == buttons_name['get_projects_billing']:
+        if not check_admin(user_id):
+            return
+        billing = get_projects_billing()
+        msg = f'Выручка: {billing}'
+        bot.send_message(chat_id, msg)
+
+    elif text == buttons_name['edit_price']:
+        if not check_admin(user_id):
+            return
+        msg = 'Выберите редактируемый прайс'
+        bot.send_message(chat_id, msg, reply_markup=price_menu)
+        user_set_action(user_id, 'select_edit_price')
 
     elif text == buttons_name['cancel_admin']:
         if not check_admin(user_id):
@@ -306,7 +328,7 @@ def message_handler(message):
         bot.send_message(chat_id, 'Отменено',
                          reply_markup=proj_menu)
         user_set_action(user_id, 'project_edit')
-        
+     
     elif text == buttons_name['confirm_delete_proj']:
         if not check_admin(user_id):
             return
@@ -318,7 +340,6 @@ def message_handler(message):
 
     # Обработка текста вне кнопок
     else:
-        action = user_get_action(user_id)
         proj_select = user_get_select(user_id)
 
         # Обработка ввода для добавления проекта
@@ -517,6 +538,27 @@ def message_handler(message):
                 user_set_action(user_id, 'project_edit')
             except Exception as e:
                 msg = f'Возникла ошибка, зовем алекса 💀\n{e}'
+                bot.send_message(chat_id, msg, reply_markup=project_edit)
+
+        elif action == 'edit_price':
+            if not check_admin(user_id):
+                return
+            select = user_get_select(user_id)
+            file_path = price_list[select]
+            write_text_file(file_path, text)
+            bot.send_message(chat_id, 'Изменено)', reply_markup=admin_menu)
+            user_set_action(user_id, 'menu')
+
+        elif action == 'select_edit_price':
+            if not check_admin(user_id):
+                return
+            if text in price_list:
+                user_set_select(user_id, text)
+                user_set_action(user_id, 'edit_price')
+                msg = 'Введите новый прайс'
+                bot.send_message(chat_id, msg, reply_markup=cancel_menu_admin)
+            else:
+                msg = 'Введите коректный раздел прайса!'
                 bot.send_message(chat_id, msg, reply_markup=project_edit)
 
 

@@ -4,7 +4,7 @@ from telebot import types
 
 from db_module import get_projects
 
-from messages import project_statuses
+from messages import project_statuses, price_list
 
 buttons_name = {
     'price': 'Прайс ❤️',
@@ -20,6 +20,8 @@ buttons_name = {
     'add_proj': 'Добавить проект 📥',
     'get_orders': 'Заявки 📝',
     'get_reviews': 'Отзывы 🥰',
+    'get_projects_billing': 'Выручка 💵',
+    'edit_price': 'Редактор прайса 🔖',
     'delete': 'Удалить ❌',
     'delete_menu': 'Меню удаления 🗑',
     'delete_order': 'Удаление заявки ❌',
@@ -37,6 +39,7 @@ buttons_name = {
 }
 
 
+# Главное меню для пользователя
 main_menu_user = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
 main_menu_user.add(types.KeyboardButton(buttons_name['price']),
                    types.KeyboardButton(buttons_name['works']),
@@ -46,6 +49,7 @@ main_menu_user.add(types.KeyboardButton(buttons_name['price']),
                    types.KeyboardButton(buttons_name['review']),
                    )
 
+# Главное меню с кнопкой админки
 main_menu_admin = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
 main_menu_admin.add(types.KeyboardButton(buttons_name['price']),
                     types.KeyboardButton(buttons_name['works']),
@@ -56,42 +60,48 @@ main_menu_admin.add(types.KeyboardButton(buttons_name['price']),
                     types.KeyboardButton(buttons_name['admin']),
                     )
 
+# Меню отмены ведущее в гл меню
 cancel_menu = types.ReplyKeyboardMarkup(resize_keyboard=True)
 cancel_menu.add(types.KeyboardButton(buttons_name['cancel']))
 
+# Меню разделов прайса
+price_menu = types.ReplyKeyboardMarkup(row_width=3, resize_keyboard=True)
+price_menu.add(types.KeyboardButton(buttons_name['cancel']))
+buttons_price = [types.KeyboardButton(price) for price in price_list]
+price_menu.add(*buttons_price)
+
+# Пользовательское меню заказа
 order_menu = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
 order_menu.add(types.KeyboardButton(buttons_name['send_order']),
                types.KeyboardButton(buttons_name['cancel']))
 
+# Админ меню
 admin_menu = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
 admin_menu.add(types.KeyboardButton(buttons_name['projects_menu']),
                types.KeyboardButton(buttons_name['add_proj']),
                types.KeyboardButton(buttons_name['get_orders']),
                types.KeyboardButton(buttons_name['get_reviews']),
                types.KeyboardButton(buttons_name['delete_menu']),
+               types.KeyboardButton(buttons_name['get_projects_billing']),
+               types.KeyboardButton(buttons_name['edit_price']),
                types.KeyboardButton(buttons_name['cancel']))
 
+# Кнопка отмены в админке
 cancel_menu_admin = types.ReplyKeyboardMarkup(resize_keyboard=True)
 cancel_menu_admin.add(types.KeyboardButton(buttons_name['cancel_admin']))
 
+# Меню выбора удаления заявок или отзывов от пользователя
 delete_menu = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
 delete_menu.add(types.KeyboardButton(buttons_name['delete_order']),
                 types.KeyboardButton(buttons_name['delete_review']),
                 types.KeyboardButton(buttons_name['cancel_admin']))
 
-delete_confirm_menu = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
-delete_confirm_menu.add(types.KeyboardButton(buttons_name['cancel_edit_proj']),
-                        types.KeyboardButton(buttons_name['confirm_delete_proj']))
 
-status_select_menu = types.ReplyKeyboardMarkup(row_width=3, resize_keyboard=True)
-cancel = types.KeyboardButton(buttons_name['cancel_edit_proj'])
-buttons_status = [types.KeyboardButton(status) for status in project_statuses]
-status_select_menu.add(cancel)
-status_select_menu.add(*buttons_status)
-
-
+# Меню список проектов
 def get_project_menu():
-    projects_menu = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    """Функция, пересобирает меню каждый раз, возвращает актуальный список."""
+    projects_menu = types.ReplyKeyboardMarkup(row_width=1,
+                                              resize_keyboard=True)
     projects = get_projects()
     cancel = types.KeyboardButton(buttons_name['cancel_admin'])
     buttons_projects = [types.KeyboardButton(project[1]) for project in projects]
@@ -100,6 +110,7 @@ def get_project_menu():
     return projects_menu
 
 
+# Меню редактирования проекта
 project_edit = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
 project_edit.add(types.KeyboardButton(buttons_name['cancel_edit_proj']))
 project_edit.add(types.KeyboardButton(buttons_name['edit_proj_status']),
@@ -109,7 +120,23 @@ project_edit.add(types.KeyboardButton(buttons_name['edit_proj_status']),
                  types.KeyboardButton(buttons_name['edit_proj_date']),
                  types.KeyboardButton(buttons_name['edit_proj_time']),
                  types.KeyboardButton(buttons_name['delete_proj']),
-)
+                 )
 
+# Меню подтверждения удаления
+delete_confirm_menu = types.ReplyKeyboardMarkup(row_width=1,
+                                                resize_keyboard=True)
+delete_confirm_menu.add(
+    types.KeyboardButton(buttons_name['cancel_edit_proj']),
+    types.KeyboardButton(buttons_name['confirm_delete_proj']))
+
+# Меню выбора статуса в редактировании проекта
+status_select_menu = types.ReplyKeyboardMarkup(row_width=3,
+                                               resize_keyboard=True)
+cancel = types.KeyboardButton(buttons_name['cancel_edit_proj'])
+buttons_status = [types.KeyboardButton(status) for status in project_statuses]
+status_select_menu.add(cancel)
+status_select_menu.add(*buttons_status)
+
+# Меню выхода с редактирования проекта
 cancel_edit_proj = types.ReplyKeyboardMarkup(resize_keyboard=True)
 cancel_edit_proj.add(types.KeyboardButton(buttons_name['cancel_edit_proj']))
