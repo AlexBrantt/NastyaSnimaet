@@ -131,8 +131,8 @@ def project_create(data):
         cur = con.cursor()
         cur.execute(
             '''INSERT INTO project (name, price, customer,
-            date, time)
-            VALUES (?, ?, ?, ?, ?);''',
+            date, time, team)
+            VALUES (?, ?, ?, ?, ?, ?);''',
             data
         )
         con.commit()
@@ -307,6 +307,56 @@ def check_user_reviews(username):
     con.close()
     return result
 
+
+def give_coupon(data):
+    """Выдает купон"""
+    con = db_connect()
+    try:
+        cur = con.cursor()
+        cur.execute(
+            '''INSERT INTO coupon (owner, value)
+            VALUES (?, ?);''',
+            data
+        )
+        con.commit()
+        logging.info("Купон внесен в базу.")
+    except sqlite3.Error as e:
+        logging.error("Ошибка при вставке данных пользователя:", e)
+    finally:
+        con.close()
+
+
+def get_user_coupone(username):
+    """Получает все купоны для пользователя, если значение team содержится в owner."""
+    con = db_connect()
+    cur = con.cursor()
+    # Получаем все team из таблицы project по имени пользователя
+    cur.execute("SELECT DISTINCT team FROM project WHERE customer = ?", (username,))
+    team_results = cur.fetchall()
+
+    if not team_results:
+        con.close()
+        return None
+    
+    all_coupons = []
+    seen_coupons = set()
+    # Проходим по всем найденным team и ищем купоны для каждой из них
+    for team_result in team_results:
+        team = team_result[0]
+        if team is None:
+            continue
+
+        # Получаем все записи из таблицы coupon, если team содержится в owner
+        cur.execute("SELECT * FROM coupon WHERE owner LIKE ?", ('%' + team + '%',))
+        coupons = cur.fetchall()
+
+        for coupon in coupons:
+            if coupon not in seen_coupons:
+                seen_coupons.add(coupon)
+                all_coupons.append(coupon)
+    con.close()
+
+    return all_coupons if all_coupons else None
 
 # ОТЛАДКА
 def clear_users_db():

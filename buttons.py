@@ -10,18 +10,21 @@ buttons_name = {
     'price': 'Прайс ❤️',
     'works': 'Работы 🎥',
     'check_date': 'Проверить дату 📆',
+    'user_project': 'Мои проекты 📗',
     'stage': 'Стадия монтажа 🔍',
+    'coupone': 'Купоны 🎁',
     'order': 'Записаться 📝',
     'review': 'Оставить отзыв 💌',
     'cancel': 'Отмена',
     'send_order': 'Молча отправить✅',
     'admin': 'Админка 📱',
-    'projects_menu': 'Мои проекты 📗',
+    'projects_menu': 'Проекты 📗',
     'add_proj': 'Добавить проект 📥',
     'get_orders': 'Заявки 📝',
     'get_reviews': 'Отзывы 🥰',
     'get_projects_billing': 'Выручка 💵',
     'edit_price': 'Редактор прайса 🔖',
+    'give_coupon': 'Выдать купон 🎁',
     'delete': 'Удалить ❌',
     'delete_menu': 'Меню удаления 🗑',
     'delete_order': 'Удаление заявки ❌',
@@ -44,7 +47,7 @@ main_menu_user = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
 main_menu_user.add(types.KeyboardButton(buttons_name['price']),
                    types.KeyboardButton(buttons_name['works']),
                    types.KeyboardButton(buttons_name['check_date']),
-                   types.KeyboardButton(buttons_name['stage']),
+                   types.KeyboardButton(buttons_name['user_project']),
                    types.KeyboardButton(buttons_name['order']),
                    types.KeyboardButton(buttons_name['review']),
                    )
@@ -54,7 +57,7 @@ main_menu_admin = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
 main_menu_admin.add(types.KeyboardButton(buttons_name['price']),
                     types.KeyboardButton(buttons_name['works']),
                     types.KeyboardButton(buttons_name['check_date']),
-                    types.KeyboardButton(buttons_name['stage']),
+                    types.KeyboardButton(buttons_name['user_project']),
                     types.KeyboardButton(buttons_name['order']),
                     types.KeyboardButton(buttons_name['review']),
                     types.KeyboardButton(buttons_name['admin']),
@@ -70,6 +73,13 @@ price_menu.add(types.KeyboardButton(buttons_name['cancel']))
 buttons_price = [types.KeyboardButton(price) for price in price_list]
 price_menu.add(*buttons_price)
 
+user_project_menu = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
+user_project_menu.add(types.KeyboardButton(buttons_name['stage']),
+                      types.KeyboardButton(buttons_name['coupone']),
+                      types.KeyboardButton(buttons_name['cancel']),
+                      )
+
+
 # Пользовательское меню заказа
 order_menu = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
 order_menu.add(types.KeyboardButton(buttons_name['send_order']),
@@ -84,6 +94,7 @@ admin_menu.add(types.KeyboardButton(buttons_name['projects_menu']),
                types.KeyboardButton(buttons_name['delete_menu']),
                types.KeyboardButton(buttons_name['get_projects_billing']),
                types.KeyboardButton(buttons_name['edit_price']),
+               types.KeyboardButton(buttons_name['give_coupon']),
                types.KeyboardButton(buttons_name['cancel']))
 
 # Кнопка отмены в админке

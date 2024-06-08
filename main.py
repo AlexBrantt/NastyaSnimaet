@@ -23,7 +23,8 @@ from db_module import (user_create, user_exist,
                        get_project_by_name, edit_project,
                        delete_project, user_get_select,
                        user_set_select, update_last_interaction,
-                       get_projects_billing,)
+                       get_projects_billing, give_coupon,
+                       get_user_coupone)
 
 from buttons import (buttons_name, main_menu_admin,
                      main_menu_user, delete_menu,
@@ -31,7 +32,8 @@ from buttons import (buttons_name, main_menu_admin,
                      admin_menu, cancel_menu_admin,
                      get_project_menu, project_edit,
                      cancel_edit_proj, delete_confirm_menu,
-                     status_select_menu, price_menu)
+                     status_select_menu, price_menu,
+                     user_project_menu)
 
 from validators import date_validator
 
@@ -84,6 +86,7 @@ def time_to_minutes(time_str):
     start_time = time_str.split('-')[0]
     hours, minutes = map(int, start_time.split(':'))
     return hours * 60 + minutes
+
 
 @bot.message_handler(commands=['start'])
 def user_register(message):
@@ -152,6 +155,10 @@ def message_handler(message):
                          reply_markup=cancel_menu)
         user_set_action(user_id, 'check_date')
 
+    elif text == buttons_name['user_project']:
+        bot.send_message(chat_id, 'Меню проектов',
+                         reply_markup=user_project_menu)
+
     # Команда проверки статуса проектов пользователя
     elif text == buttons_name['stage']:
         projects = get_status_my_proj(username)
@@ -164,6 +171,14 @@ def message_handler(message):
         else:
             bot.send_message(chat_id, messages_dict['stage_else'],
                              reply_markup=main_menu)
+
+    elif text == buttons_name['coupone']:
+        coupons = get_user_coupone(username)
+        if coupons:
+            msg = '\n\n'.join([f'Купон для команды {coupon[1]}\nНа {coupon[2]}' for coupon in coupons])
+        else:
+            msg = 'Купоны не найдены.'
+        bot.send_message(chat_id, msg)
 
     elif text == buttons_name['order']:
         bot.send_message(chat_id, messages_dict['order'],
@@ -241,6 +256,13 @@ def message_handler(message):
         msg = 'Выберите редактируемый прайс'
         bot.send_message(chat_id, msg, reply_markup=price_menu)
         user_set_action(user_id, 'select_edit_price')
+
+    elif text == buttons_name['give_coupon']:
+        if not check_admin(user_id):
+            return
+        bot.send_message(chat_id, messages_dict['give_coupon'],
+                         reply_markup=cancel_menu_admin)
+        user_set_action(user_id, 'give_coupon')
 
     elif text == buttons_name['cancel_admin']:
         if not check_admin(user_id):
@@ -349,10 +371,11 @@ def message_handler(message):
             try:
                 parts = shlex.split(text)
                 project_name = parts[0].strip("'")
-                customer = parts[1] if len(parts) > 1 else None
-                price = int(parts[2]) if len(parts) > 2 else None
-                date = parts[3] if len(parts) > 3 else None
-                time_range = parts[4] if len(parts) > 4 else None
+                team = parts[1].strip("'") if len(parts) > 1 else None
+                customer = parts[2] if len(parts) > 2 else None
+                price = int(parts[3]) if len(parts) > 3 else None
+                date = parts[4] if len(parts) > 4 else None
+                time_range = parts[5] if len(parts) > 5 else None
 
                 valid_date = date_validator(date)
                 if valid_date:
@@ -361,7 +384,8 @@ def message_handler(message):
                             price,
                             customer.replace('@', '') if customer is not None else None,
                             valid_date,
-                            time_range
+                            time_range,
+                            team,
                         )
                     project_create(data)
                     user_set_action(user_id, 'menu')
@@ -454,10 +478,12 @@ def message_handler(message):
                 status = project[4]
                 date = project[5]
                 time = project[6]
+                team = project[7]
                 msg = f"""Информация о проекте ID {id}
 Название: {name}
 Статус: {status}
 Заказчик: {customer}
+Команда: {team}
 Дата: {date} {time}
 Цена: {price}
 """
@@ -560,6 +586,29 @@ def message_handler(message):
             else:
                 msg = 'Введите коректный раздел прайса!'
                 bot.send_message(chat_id, msg, reply_markup=project_edit)
+
+        elif action == 'give_coupon':
+            if not check_admin(user_id):
+                return
+            try:
+                parts = shlex.split(text)
+                team = parts[0].strip("'")
+                value = parts[1]if len(parts) > 1 else None
+                data = (team, value)
+                give_coupon(data)
+                msg = f'Купон на {value} успешно выдан команде {team}'
+                bot.send_message(chat_id, msg, reply_markup=admin_menu)
+                user_set_action(user_id, 'menu')
+            except IndexError:
+                err_msg = "Ошибка: недостаточно аргументов в введенной строке."
+                bot.send_message(chat_id, err_msg,
+                                 reply_markup=main_menu)
+                logging.info(f'{user_id}: {err_msg}')
+            except ValueError:
+                bot.send_message(chat_id, messages_dict['proj_error'],
+                                 reply_markup=main_menu)
+                logging.info(f"{user_id}: {messages_dict['proj_error']}")
+
 
 
 try:

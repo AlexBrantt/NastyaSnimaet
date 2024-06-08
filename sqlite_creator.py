@@ -26,12 +26,15 @@ query_project = '''
 CREATE TABLE IF NOT EXISTS project (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, price INTEGER, customer TEXT, status TEXT DEFAULT заказ, date TEXT, time TEXT);
 '''
 
+
 query = '''
-DROP TABLE IF EXISTS project;
+CREATE TABLE IF NOT EXISTS coupon (id INTEGER PRIMARY KEY AUTOINCREMENT, owner TEXT NOT NULL, value TEXT);
 '''
 
+query = '''
+DROP TABLE IF EXISTS coupon'''
 # Применяем запросы.
-cur.execute(query_project)
+cur.execute(query)
 # весь скрипт применить...
 # cur.executescript(''' ''')
 # Закрываем соединение с БД.
