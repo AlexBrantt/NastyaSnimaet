@@ -2,6 +2,13 @@ from datetime import datetime
 import re
 
 
+def coupone_add_validator(text):
+    pattern = r"^(['\"])(.*?)\1(?:\s+(.*))?$"
+    
+    match = re.match(pattern, text)
+    if not match:
+        raise ValueError("Неверный формат строки.")
+
 def date_validator(date):
     # Формат
     date_pattern = re.compile(r'^\d{2}\.\d{2}\.(\d{2}|\d{4})$')

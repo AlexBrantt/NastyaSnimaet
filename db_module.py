@@ -39,6 +39,30 @@ def user_exist(user_id):
     return result is not None
 
 
+def get_user_by_username(username):
+    """Возвращает пользователя по username."""
+    con = db_connect()
+    cur = con.cursor()
+    cur.execute("SELECT * FROM user WHERE username = ?", (username,))
+    result = cur.fetchone()
+    con.close()
+    if result:
+        return result
+    else:
+        return None
+
+
+def get_users_id():
+    """Возвращает user_id всех пользователей"""
+    con = db_connect()
+    cur = con.cursor()
+    cur.execute("SELECT user_id FROM user")
+    result = cur.fetchall()
+    con.close()
+    return result
+
+
+
 def user_set_action(user_id, action):
     """Устанавлиет текущее действие пользователю."""
     con = db_connect()
@@ -95,6 +119,17 @@ def user_set_status(user_id, status):
     con.commit()
     con.close()
     # logging.info(f'Установлен статус: {status}')
+
+
+def user_set_status_by_username(username, status):
+    """Банит пользователя."""
+    con = db_connect()
+    cur = con.cursor()
+    cur.execute("UPDATE user SET status = ? WHERE username = ?", (status, username))
+    con.commit()
+    affected_rows = cur.rowcount  # Количество измененных строк
+    con.close()
+    return affected_rows > 0  # Возвращаем True, если хотя бы одна строка была обновлена
 
 
 def update_last_interaction(user_id, last_iteraion):
@@ -324,6 +359,86 @@ def give_coupon(data):
         logging.error("Ошибка при вставке данных пользователя:", e)
     finally:
         con.close()
+
+
+def auto_give_cupone(team):
+    con = db_connect()
+    cur = con.cursor()
+    # Подсчитываем количество записей с заданным значением в столбце team
+    cur.execute("SELECT COUNT(*) FROM project WHERE team = ?", (team,))
+    count = cur.fetchone()[0]
+    con.close()
+    try:
+        period = settings_get('autocoupon_periodicity')
+        # Проверяем, делится ли количество записей на 5 без остатка
+        if count % int(period[0]) == 0:
+            value = settings_get('autocoupon_value')
+            data = (team, value[0])
+            give_coupon(data)
+            print(f'Был автоматически выдан купон команде {team}')
+            return True
+        else:
+            return False
+    except TypeError as e:
+        logging.error("Ошибка при автовыдаче купона", e)
+        return False
+    except ZeroDivisionError:
+        # Автовыдача отключена
+        return False
+
+
+def settings_update(setting, value):
+    """Заменить значение настройки"""
+    try:
+        con = db_connect()
+        cur = con.cursor()
+        cur.execute("UPDATE settings SET value = ? WHERE key = ?", (value, setting))
+        con.commit()
+        con.close()
+    except Exception as e:
+        print(f"Ошибка при обновлении настройки '{setting}': {e}")
+
+
+def settings_get(setting):
+    """Получить значение настройки."""
+    try:
+        con = db_connect()
+        cur = con.cursor()
+        query = "SELECT value FROM settings WHERE key = ?"
+        cur.execute(query, (setting,))
+        result = cur.fetchone()
+        con.close()
+        return result
+    except Exception as e:
+        print(f"Ошибка при получении настройки '{setting}': {e}")
+
+
+def delete_coupon(id):
+    con = db_connect()
+    cur = con.cursor()
+
+    # Проверяем, существует ли купон с данным id
+    cur.execute("SELECT 1 FROM coupon WHERE id = ?", (id,))
+    if cur.fetchone() is None:
+        con.close()
+        return False
+
+    # Удаляем купон
+    cur.execute("DELETE FROM coupon WHERE id = ?", (id,))
+    con.commit()
+    con.close()
+    return True
+
+
+def get_all_cupone():
+    """Получает все купоны."""
+    con = db_connect()
+    cur = con.cursor()
+    query = "SELECT * FROM coupon"
+    cur.execute(query)
+    result = cur.fetchall()
+    con.close()
+    return result
 
 
 def get_user_coupone(username):

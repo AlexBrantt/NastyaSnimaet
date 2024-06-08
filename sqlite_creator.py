@@ -27,14 +27,16 @@ CREATE TABLE IF NOT EXISTS project (id INTEGER PRIMARY KEY AUTOINCREMENT, name T
 '''
 
 
-query = '''
+query1= '''
 CREATE TABLE IF NOT EXISTS coupon (id INTEGER PRIMARY KEY AUTOINCREMENT, owner TEXT NOT NULL, value TEXT);
 '''
 
 query = '''
-DROP TABLE IF EXISTS coupon'''
+INSERT INTO settings (key, value) VALUES ('autocoupon_value', '20%');
+'''
 # Применяем запросы.
 cur.execute(query)
+#con.commit()
 # весь скрипт применить...
 # cur.executescript(''' ''')
 # Закрываем соединение с БД.

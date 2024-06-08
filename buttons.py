@@ -24,21 +24,29 @@ buttons_name = {
     'get_reviews': 'Отзывы 🥰',
     'get_projects_billing': 'Выручка 💵',
     'edit_price': 'Редактор прайса 🔖',
+    'menu_coupon': 'Купоны ✨',
     'give_coupon': 'Выдать купон 🎁',
+    'delete_coupon': 'Забрать купон 😈',
+    'admin_users_menu': 'Пользователи 👥',
+    'admin_user_info': 'Карточка пользователя 👤',
+    'ban_user': 'Забанить 🚷',
+    'unban_user': 'Разбанить ✳️',
     'delete': 'Удалить ❌',
-    'delete_menu': 'Меню удаления 🗑',
     'delete_order': 'Удаление заявки ❌',
     'delete_review': 'Удаление отзыва ❌',
     'cancel_admin': 'Hазад',
-    'edit_proj_name': 'Изменить название',
-    'edit_proj_price': 'Изменить цену',
-    'edit_proj_customer': 'Изменить заказчика',
-    'edit_proj_status': 'Изменить статус',
-    'edit_proj_date': 'Изменить дату',
-    'edit_proj_time': 'Изменить время',
+    'edit_proj_name': 'Изменить название 📝',
+    'edit_proj_price': 'Изменить цену 💵',
+    'edit_proj_customer': 'Изменить заказчика 👤',
+    'edit_proj_status': 'Изменить статус 📌',
+    'edit_proj_date': 'Изменить дату 📆',
+    'edit_proj_time': 'Изменить время ⏰',
     'cancel_edit_proj': 'Назад',
     'delete_proj': 'Удалить проект 🛑',
     'confirm_delete_proj': 'Точно удалить ❌',
+    'settings': 'Настройки ⚙️',
+    'autocoupon_periodicity': 'Интервал автокупона 🤖',
+    'autocoupon_value': 'Скидка автокупона 🛍',
 }
 
 
@@ -73,12 +81,12 @@ price_menu.add(types.KeyboardButton(buttons_name['cancel']))
 buttons_price = [types.KeyboardButton(price) for price in price_list]
 price_menu.add(*buttons_price)
 
+# Меню проектов пользователя
 user_project_menu = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
 user_project_menu.add(types.KeyboardButton(buttons_name['stage']),
                       types.KeyboardButton(buttons_name['coupone']),
                       types.KeyboardButton(buttons_name['cancel']),
                       )
-
 
 # Пользовательское меню заказа
 order_menu = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
@@ -89,22 +97,43 @@ order_menu.add(types.KeyboardButton(buttons_name['send_order']),
 admin_menu = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
 admin_menu.add(types.KeyboardButton(buttons_name['projects_menu']),
                types.KeyboardButton(buttons_name['add_proj']),
+               types.KeyboardButton(buttons_name['get_projects_billing']),
+               types.KeyboardButton(buttons_name['menu_coupon']),
                types.KeyboardButton(buttons_name['get_orders']),
                types.KeyboardButton(buttons_name['get_reviews']),
-               types.KeyboardButton(buttons_name['delete_menu']),
-               types.KeyboardButton(buttons_name['get_projects_billing']),
-               types.KeyboardButton(buttons_name['edit_price']),
-               types.KeyboardButton(buttons_name['give_coupon']),
+               types.KeyboardButton(buttons_name['admin_users_menu']),
+               types.KeyboardButton(buttons_name['settings']),
                types.KeyboardButton(buttons_name['cancel']))
 
 # Кнопка отмены в админке
 cancel_menu_admin = types.ReplyKeyboardMarkup(resize_keyboard=True)
 cancel_menu_admin.add(types.KeyboardButton(buttons_name['cancel_admin']))
 
+# Меню пользователей в админке
+menu_users_admin = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+menu_users_admin.add(
+    types.KeyboardButton(buttons_name['admin_user_info']),
+    types.KeyboardButton(buttons_name['ban_user']),
+    types.KeyboardButton(buttons_name['unban_user']),
+    types.KeyboardButton(buttons_name['cancel_admin'])
+    )
+
+# Меню купонов в админке
+menu_coupon = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
+menu_coupon.add(
+    types.KeyboardButton(buttons_name['give_coupon']),
+    types.KeyboardButton(buttons_name['delete_coupon']),
+    types.KeyboardButton(buttons_name['cancel_admin'])
+    )
+
+# Меню удаления заявок
+order_menu = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+order_menu.add(types.KeyboardButton(buttons_name['delete_order']),
+               types.KeyboardButton(buttons_name['cancel_admin']))
+
 # Меню выбора удаления заявок или отзывов от пользователя
-delete_menu = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
-delete_menu.add(types.KeyboardButton(buttons_name['delete_order']),
-                types.KeyboardButton(buttons_name['delete_review']),
+review_menu = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+review_menu.add(types.KeyboardButton(buttons_name['delete_review']),
                 types.KeyboardButton(buttons_name['cancel_admin']))
 
 
@@ -151,3 +180,12 @@ status_select_menu.add(*buttons_status)
 # Меню выхода с редактирования проекта
 cancel_edit_proj = types.ReplyKeyboardMarkup(resize_keyboard=True)
 cancel_edit_proj.add(types.KeyboardButton(buttons_name['cancel_edit_proj']))
+
+
+settings_menu = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
+settings_menu.add(
+    types.KeyboardButton(buttons_name['autocoupon_periodicity']),
+    types.KeyboardButton(buttons_name['autocoupon_value']),
+    types.KeyboardButton(buttons_name['edit_price']),
+    types.KeyboardButton(buttons_name['cancel_admin']),
+    )
