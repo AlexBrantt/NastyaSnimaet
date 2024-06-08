@@ -28,7 +28,7 @@ from db_module import (user_create, user_exist,
                        delete_coupon, get_user_by_username,
                        user_set_status_by_username, auto_give_cupone,
                        settings_get, settings_update,
-                       get_users_id,
+                       get_users_id
                        )
 
 from buttons import (get_project_menu, buttons_name,
@@ -46,7 +46,7 @@ from validators import date_validator, coupone_add_validator
 
 from messages import messages_dict, price_list
 
-from utils import read_text_file, write_text_file
+from utils import read_text_file, write_text_file, project_info
 
 load_dotenv()
 
@@ -474,31 +474,32 @@ def message_handler(message):
             try:
                 parts = shlex.split(text)
                 project_name = parts[0].strip("'")
-                team = parts[1].strip("'") if len(parts) > 1 else None
+                team = parts[1].strip("'")
                 customer = parts[2] if len(parts) > 2 else None
                 price = int(parts[3]) if len(parts) > 3 else None
                 date = parts[4] if len(parts) > 4 else None
                 time_range = parts[5] if len(parts) > 5 else None
-
-                valid_date = date_validator(date)
-                if valid_date:
-                    data = (
-                            project_name,
-                            price,
-                            customer.replace('@', '') if customer is not None else None,
-                            valid_date,
-                            time_range,
-                            team,
-                        )
-                    project_create(data)
-                    user_set_action(user_id, 'menu')
-                    bot.send_message(chat_id, messages_dict['proj_added'],
-                                     reply_markup=admin_menu)
-                    if auto_give_cupone(team):
-                        msg = f'Автоматически был выдан купон команде -  {team}'
-                        bot.send_message(chat_id, msg)
-                else:
-                    bot.send_message(chat_id, messages_dict['check_date_error'])
+                
+                if date:
+                    date = date_validator(date)
+                    if not date:
+                        bot.send_message(chat_id, messages_dict['check_date_error'])
+                        return
+                data = (
+                    project_name,
+                    price if price is not None else None,
+                    customer.replace('@', '') if customer is not None else None,
+                    date if date is not None else None,
+                    time_range if time_range is not None else None,
+                    team,
+                )
+                project_create(data)
+                user_set_action(user_id, 'menu')
+                bot.send_message(chat_id, messages_dict['proj_added'],
+                                 reply_markup=admin_menu)
+                if auto_give_cupone(team):
+                    msg = f'Автоматически был выдан купон команде -  {team}'
+                    bot.send_message(chat_id, msg)
             except IndexError:
                 err_msg = "Ошибка: недостаточно аргументов в введенной строке."
                 bot.send_message(chat_id, err_msg)
@@ -583,12 +584,12 @@ def message_handler(message):
             if project:
                 id = project[0]
                 name = project[1]
-                price = project[2]
-                customer = project[3]
-                status = project[4]
-                date = project[5]
-                time = project[6]
-                team = project[7]
+                price = project[2] if project[2] else messages_dict['empty_value']
+                customer = project[3] if project[3] else messages_dict['empty_value']
+                status = project[4] if project[4] else messages_dict['empty_value']
+                date = project[5] if project[5] else messages_dict['empty_value']
+                time = project[6] if project[6] else messages_dict['empty_value']
+                team = project[7] if project[7] else messages_dict['empty_value']
                 msg = f"""Информация о проекте ID {id}
 Название: {name}
 Статус: {status}
@@ -609,7 +610,8 @@ def message_handler(message):
                 return
             try:
                 edit_project('name', proj_select, text)
-                msg = 'Проект успешно отредактирован👌🏻'
+                info = project_info(proj_select)
+                msg = f'{info}\nПроект успешно отредактирован👌🏻'
                 bot.send_message(chat_id, msg, reply_markup=project_edit)
                 user_set_action(user_id, 'project_edit')
             except Exception as e:
@@ -621,7 +623,8 @@ def message_handler(message):
                 return
             try:
                 edit_project('status', proj_select, text)
-                msg = 'Проект успешно отредактирован👌🏻'
+                info = project_info(proj_select)
+                msg = f'{info}\nПроект успешно отредактирован👌🏻'
                 bot.send_message(chat_id, msg, reply_markup=project_edit)
                 user_set_action(user_id, 'project_edit')
             except Exception as e:
@@ -633,7 +636,8 @@ def message_handler(message):
                 return
             try:
                 edit_project('price', proj_select, text)
-                msg = 'Проект успешно отредактирован👌🏻'
+                info = project_info(proj_select)
+                msg = f'{info}\nПроект успешно отредактирован👌🏻'
                 bot.send_message(chat_id, msg, reply_markup=project_edit)
                 user_set_action(user_id, 'project_edit')
             except Exception as e:
@@ -645,7 +649,8 @@ def message_handler(message):
                 return
             try:
                 edit_project('customer', proj_select, text)
-                msg = 'Проект успешно отредактирован👌🏻'
+                info = project_info(proj_select)
+                msg = f'{info}\nПроект успешно отредактирован👌🏻'
                 bot.send_message(chat_id, msg, reply_markup=project_edit)
                 user_set_action(user_id, 'project_edit')
             except Exception as e:
@@ -657,7 +662,8 @@ def message_handler(message):
                 return
             try:
                 edit_project('date', proj_select, text)
-                msg = 'Проект успешно отредактирован👌🏻'
+                info = project_info(proj_select)
+                msg = f'{info}\nПроект успешно отредактирован👌🏻'
                 bot.send_message(chat_id, msg, reply_markup=project_edit)
                 user_set_action(user_id, 'project_edit')
             except Exception as e:
@@ -669,7 +675,8 @@ def message_handler(message):
                 return
             try:
                 edit_project('time', proj_select, text)
-                msg = 'Проект успешно отредактирован👌🏻'
+                info = project_info(proj_select)
+                msg = f'{info}\nПроект успешно отредактирован👌🏻'
                 bot.send_message(chat_id, msg, reply_markup=project_edit)
                 user_set_action(user_id, 'project_edit')
             except Exception as e:

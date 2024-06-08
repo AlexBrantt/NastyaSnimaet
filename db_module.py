@@ -216,6 +216,17 @@ def get_project_by_name(name):
     return result
 
 
+def get_project_by_id(id):
+    """Получает проекты."""
+    con = db_connect()
+    cur = con.cursor()
+    query = "SELECT * FROM project WHERE id = ?"
+    cur.execute(query, (id,))
+    result = cur.fetchone()
+    con.close()
+    return result
+
+
 # меняем значение в столбце column по id на new_arg
 def edit_project(column, id, new_arg):
     """Получает проекты."""

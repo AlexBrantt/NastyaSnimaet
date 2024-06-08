@@ -1,5 +1,28 @@
 import logging
+from db_module import get_project_by_id
+from messages import messages_dict
 
+
+def project_info(id):
+    project = get_project_by_id(id)
+    if project:
+        id = project[0]
+        name = project[1]
+        price = project[2] if project[2] else messages_dict['empty_value']
+        customer = project[3] if project[3] else messages_dict['empty_value']
+        status = project[4] if project[4] else messages_dict['empty_value']
+        date = project[5] if project[5] else messages_dict['empty_value']
+        time = project[6] if project[6] else messages_dict['empty_value']
+        team = project[7] if project[7] else messages_dict['empty_value']
+        info = f"""Информация о проекте ID {id}
+Название: {name}
+Статус: {status}
+Заказчик: {customer}
+Команда: {team}
+Дата: {date} {time}
+Цена: {price}
+"""
+        return info
 
 def read_text_file(file_path):
     """Возвращает содержимое текстового файла"""
