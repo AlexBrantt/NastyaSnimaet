@@ -259,7 +259,7 @@ def get_reviews():
     """Получает отзывы."""
     con = db_connect()
     cur = con.cursor()
-    cur.execute("SELECT username, text FROM review")
+    cur.execute("SELECT id, username, text FROM review")
     result = cur.fetchall()
     con.close()
     return result
@@ -287,40 +287,33 @@ def get_orders():
     """Получает отзывы."""
     con = db_connect()
     cur = con.cursor()
-    cur.execute("SELECT username, text FROM orders")
+    cur.execute("SELECT id, username, text FROM orders")
     result = cur.fetchall()
     con.close()
     return result
 
 
-def delete_review(username):
-    """Удаляет отзывы пользователя."""
-    username = username.replace('@', '')
-    get = check_user_reviews(username)
-
-    if get:
-        con = db_connect()
-        cur = con.cursor()
-        cur.execute("DELETE FROM review WHERE username = ?", (username,))
-        con.commit()
-        con.close()
-        return True
-    return False
+def delete_review(id):
+    """Удаляет отзыв пользователя."""
+    con = db_connect()
+    cur = con.cursor()
+    cur.execute("DELETE FROM review WHERE id = ?", (id,))
+    deleted_rows = cur.rowcount
+    con.commit()
+    con.close()
+    return deleted_rows > 0
 
 
-def delete_order(username):
-    """Удаляет заявки пользователя."""
-    username = username.replace('@', '')
-    get = check_user_orders(username)
+def delete_order(id):
+    """Удаляет заявку пользователя."""
+    con = db_connect()
+    cur = con.cursor()
+    cur.execute("DELETE FROM orders WHERE id = ?", (id,))
+    deleted_rows = cur.rowcount
+    con.commit()
+    con.close()
+    return deleted_rows > 0
 
-    if get:
-        con = db_connect()
-        cur = con.cursor()
-        cur.execute("DELETE FROM orders WHERE username = ?", (username,))
-        con.commit()
-        con.close()
-        return True
-    return False
 
 
 def check_user_orders(username):

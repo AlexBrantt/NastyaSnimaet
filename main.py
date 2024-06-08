@@ -38,9 +38,9 @@ from buttons import (get_project_menu, buttons_name,
                      project_edit, cancel_edit_proj,
                      delete_confirm_menu, status_select_menu,
                      price_menu, user_project_menu,
-                     menu_coupon, order_menu,
-                     review_menu, menu_users_admin,
-                     settings_menu)
+                     menu_coupon, order_menu_delete,
+                     review_menu_delete, menu_users_admin,
+                     settings_menu, send_all_confirm)
 
 from validators import date_validator, coupone_add_validator
 
@@ -95,19 +95,19 @@ def time_to_minutes(time_str):
     return hours * 60 + minutes
 
 
-def send_all():
+def send_all(msg):
     logging.info('[Рассылка]: Рассылка запущена')
     users_id = get_users_id()
-    for index, id in enumerate(users_id):
+    for index, id in enumerate(users_id, 1):
         chat_id = id[0]
-        bot.send_message(chat_id, 'Тест')
+        bot.send_message(chat_id, msg)
         logging.info(f'[Рассылка]: {index}-е сообщение доставлено')
         if index % 5 == 0:
             logging.info('[Рассылка]: Пауза')
             time.sleep(1)
     logging.info('[Рассылка]: Рассылка завершена')
 
-# send_all()
+
 @bot.message_handler(commands=['start'])
 def user_register(message):
     """Добавляение пользователя в бд."""
@@ -238,11 +238,12 @@ def message_handler(message):
         orders = get_orders()
         order_list = ''
         for order in orders:
-            order_list += f'Отправитель: @{order[0]}\nТекст: {order[1]}\n\n'
+            order_list += f"""Заказ №{order[0]} от @{order[1]}
+Текст: {order[2]}\n\n"""
         if not orders:
             order_list = messages_dict['empty']
         msg = f'{messages_dict["orders_head"]}\n\n{order_list}'
-        bot.send_message(chat_id, msg, reply_markup=order_menu)
+        bot.send_message(chat_id, msg, reply_markup=order_menu_delete)
 
     # Команда получения отзывов
     elif text == buttons_name['get_reviews']:
@@ -251,11 +252,12 @@ def message_handler(message):
         reviews = get_reviews()
         rev_list = ''
         for review in reviews:
-            rev_list += f'@{review[0]}\n💌: {review[1]}\n\n'
+            rev_list += f"""Отзыв №{review[0]} от @{review[1]}
+💌: {review[2]}\n\n"""
         if not reviews:
             rev_list = messages_dict['empty']
         msg = f'{messages_dict["reviews_head"]}\n\n{rev_list}'
-        bot.send_message(chat_id, msg, reply_markup=review_menu)
+        bot.send_message(chat_id, msg, reply_markup=review_menu_delete)
      
     elif text == buttons_name['get_projects_billing']:
         if not check_admin(user_id):
@@ -445,6 +447,21 @@ def message_handler(message):
         bot.send_message(chat_id, msg, reply_markup=settings_menu)
         user_set_action(user_id, 'autocoupon_value')
 
+    elif text == buttons_name['send_all']:
+        if not check_admin(user_id):
+            return
+        msg = 'Введите текст рассылки'
+        bot.send_message(chat_id, msg, reply_markup=cancel_menu_admin)
+        user_set_action(user_id, 'send_all')
+
+    elif (text == buttons_name['send_all_confirm'] and
+          action == 'send_all_confirm'):
+
+        file_path = 'price/send_all.txt'
+        msg = read_text_file(file_path)
+        bot.send_message(chat_id, 'Рассылка запущена', reply_markup=admin_menu)
+        user_set_action(user_id, 'menu')
+        send_all(msg)
 
     # Обработка текста вне кнопок
     else:
@@ -534,23 +551,29 @@ def message_handler(message):
         elif action == 'delete_order':
             if not check_admin(user_id):
                 return
-            customer = text.replace('@', '')
-            if delete_order(customer):
-                msg = f'Заяки пользователя {text} удалены'
-                bot.send_message(chat_id, msg, reply_markup=admin_menu)
+            if text.isdigit():
+                if delete_order(text):
+                    msg = f'Заказ номер {text} удален'
+                    bot.send_message(chat_id, msg, reply_markup=admin_menu)
+                else:
+                    msg = '[Ошибка]: Заказа c таким номером не найдено'
+                    bot.send_message(chat_id, msg)
             else:
-                msg = '[Ошибка]: Заявок от пользователя не найдено'
+                msg = '[Ошибка]: Введите корректный номер заказа!'
                 bot.send_message(chat_id, msg)
 
         elif action == 'delete_review':
             if not check_admin(user_id):
                 return
-            customer = text.replace('@', '')
-            if delete_review(customer):
-                msg = f'Отзывы пользователя {text} удалены'
-                bot.send_message(chat_id, msg, reply_markup=admin_menu)
+            if text.isdigit():
+                if delete_review(text):
+                    msg = f'Отзыв номер {text} удален'
+                    bot.send_message(chat_id, msg, reply_markup=admin_menu)
+                else:
+                    msg = '[Ошибка]: Отзыва c таким номером не найдено'
+                    bot.send_message(chat_id, msg)
             else:
-                msg = '[Ошибка]: Отзывов от пользователя не найдено'
+                msg = '[Ошибка]: Введите корректный номер отзыва!'
                 bot.send_message(chat_id, msg)
 
         elif action == 'project_edit':
@@ -775,6 +798,16 @@ ID: {get_user_id}
             user_set_action(user_id, 'menu')
             msg = f'Обновлено! Новая скидка - {text}'
             bot.send_message(chat_id, msg)
+
+        elif action == 'send_all':
+            if not check_admin(user_id):
+                return
+            file_path = 'price/send_all.txt'
+            write_text_file(file_path, text)
+            msg = f'Проверьте правильность текста:\n\n{text}'
+            bot.send_message(chat_id, msg, reply_markup=send_all_confirm)
+            user_set_action(user_id, 'send_all_confirm')
+
 
 
 try:

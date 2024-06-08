@@ -47,6 +47,8 @@ buttons_name = {
     'settings': 'Настройки ⚙️',
     'autocoupon_periodicity': 'Интервал автокупона 🤖',
     'autocoupon_value': 'Скидка автокупона 🛍',
+    'send_all': 'Рассылка ✉️',
+    'send_all_confirm': 'Подтверждаю рассылку ✅'
 }
 
 
@@ -103,6 +105,7 @@ admin_menu.add(types.KeyboardButton(buttons_name['projects_menu']),
                types.KeyboardButton(buttons_name['get_reviews']),
                types.KeyboardButton(buttons_name['admin_users_menu']),
                types.KeyboardButton(buttons_name['settings']),
+               types.KeyboardButton(buttons_name['send_all']),
                types.KeyboardButton(buttons_name['cancel']))
 
 # Кнопка отмены в админке
@@ -127,13 +130,13 @@ menu_coupon.add(
     )
 
 # Меню удаления заявок
-order_menu = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
-order_menu.add(types.KeyboardButton(buttons_name['delete_order']),
+order_menu_delete = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+order_menu_delete.add(types.KeyboardButton(buttons_name['delete_order']),
                types.KeyboardButton(buttons_name['cancel_admin']))
 
 # Меню выбора удаления заявок или отзывов от пользователя
-review_menu = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
-review_menu.add(types.KeyboardButton(buttons_name['delete_review']),
+review_menu_delete = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+review_menu_delete.add(types.KeyboardButton(buttons_name['delete_review']),
                 types.KeyboardButton(buttons_name['cancel_admin']))
 
 
@@ -189,3 +192,9 @@ settings_menu.add(
     types.KeyboardButton(buttons_name['edit_price']),
     types.KeyboardButton(buttons_name['cancel_admin']),
     )
+
+send_all_confirm = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
+send_all_confirm.add(
+    types.KeyboardButton(buttons_name['send_all_confirm']),
+    types.KeyboardButton(buttons_name['cancel_admin']),
+)

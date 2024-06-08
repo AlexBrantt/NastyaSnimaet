@@ -1,7 +1,6 @@
 from datetime import datetime
 import re
 
-
 def coupone_add_validator(text):
     pattern = r"^(['\"])(.*?)\1(?:\s+(.*))?$"
     
