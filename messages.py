@@ -149,11 +149,11 @@ project_statuses = [
 
 
 price_list = {
-    'вантейк': 'price/onetake.txt',
-    'перформанс': 'price/performance.txt',
-    'клип': 'price/clip.txt',
-    'доп. услуги': 'price/additional_services.txt',
-    'только съемка': 'price/only_shooting.txt',
-    'только монтаж': 'price/only_editing.txt',
-    'обложка': 'price/cover.txt'
+    'вантейк': 'documents/onetake.txt',
+    'перформанс': 'documents/performance.txt',
+    'клип': 'documents/clip.txt',
+    'доп. услуги': 'documents/additional_services.txt',
+    'только съемка': 'documents/only_shooting.txt',
+    'только монтаж': 'documents/only_editing.txt',
+    'обложка': 'documents/cover.txt'
 }

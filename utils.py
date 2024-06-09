@@ -1,6 +1,18 @@
 import logging
-from db_module import get_project_by_id
+from db_module import get_project_by_id, get_all_cupone
 from messages import messages_dict
+
+
+def coupons_list():
+    coupons = get_all_cupone()
+    if coupons:
+        msg = '\n\n'.join(
+            [f'КУПОН №{coupon[0]}\nКоманда: {coupon[1]}\nНа {coupon[2]}' for coupon in coupons]
+            )
+        return msg
+    else:
+        msg = 'Купоны не найдены.'
+        return msg
 
 
 def project_info(id):

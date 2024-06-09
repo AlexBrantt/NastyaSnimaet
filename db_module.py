@@ -270,7 +270,7 @@ def get_reviews():
     """Получает отзывы."""
     con = db_connect()
     cur = con.cursor()
-    cur.execute("SELECT id, username, text FROM review")
+    cur.execute("SELECT id, username, text FROM review ORDER BY id DESC LIMIT 10")
     result = cur.fetchall()
     con.close()
     return result
@@ -298,7 +298,7 @@ def get_orders():
     """Получает отзывы."""
     con = db_connect()
     cur = con.cursor()
-    cur.execute("SELECT id, username, text FROM orders")
+    cur.execute("SELECT id, username, text FROM orders ORDER BY id DESC LIMIT 10")
     result = cur.fetchall()
     con.close()
     return result

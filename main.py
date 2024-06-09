@@ -24,7 +24,7 @@ from db_module import (user_create, user_exist,
                        delete_project, user_get_select,
                        user_set_select, update_last_interaction,
                        get_projects_billing, give_coupon,
-                       get_user_coupone, get_all_cupone,
+                       get_user_coupone,
                        delete_coupon, get_user_by_username,
                        user_set_status_by_username, auto_give_cupone,
                        settings_get, settings_update,
@@ -46,7 +46,7 @@ from validators import date_validator, coupone_add_validator
 
 from messages import messages_dict, price_list
 
-from utils import read_text_file, write_text_file, project_info
+from utils import read_text_file, write_text_file, project_info, coupons_list
 
 load_dotenv()
 
@@ -166,8 +166,9 @@ def message_handler(message):
 
     # Команда Посмотреть работы
     elif text == buttons_name['works']:
-        bot.send_message(chat_id, messages_dict['works'],
-                         reply_markup=main_menu)
+        file_path = 'documents/works.txt'
+        msg = read_text_file(file_path)
+        bot.send_message(chat_id, msg, reply_markup=main_menu)
 
     # Команда посмотреть свободна ли дата
     elif text == buttons_name['check_date']:
@@ -189,8 +190,7 @@ def message_handler(message):
             msg = f'{messages_dict["stage_if"]}\n\n{statuses}'
             bot.send_message(chat_id, msg, reply_markup=main_menu)
         else:
-            bot.send_message(chat_id, messages_dict['stage_else'],
-                             reply_markup=main_menu)
+            bot.send_message(chat_id, messages_dict['stage_else'])
 
     elif text == buttons_name['coupone']:
         coupons = get_user_coupone(username)
@@ -276,13 +276,7 @@ def message_handler(message):
     elif text == buttons_name['menu_coupon']:
         if not check_admin(user_id):
             return
-        coupons = get_all_cupone()
-        if coupons:
-            msg = '\n\n'.join(
-                [f'КУПОН №{coupon[0]}\nКоманда: {coupon[1]}\nНа {coupon[2]}' for coupon in coupons]
-                )
-        else:
-            msg = 'Купоны не найдены.'
+        msg = coupons_list()
         bot.send_message(chat_id, msg, reply_markup=menu_coupon)
 
     elif text == buttons_name['give_coupon']:
@@ -457,7 +451,7 @@ def message_handler(message):
     elif (text == buttons_name['send_all_confirm'] and
           action == 'send_all_confirm'):
 
-        file_path = 'price/send_all.txt'
+        file_path = 'documents/send_all.txt'
         msg = read_text_file(file_path)
         bot.send_message(chat_id, 'Рассылка запущена', reply_markup=admin_menu)
         user_set_action(user_id, 'menu')
@@ -555,7 +549,7 @@ def message_handler(message):
             if text.isdigit():
                 if delete_order(text):
                     msg = f'Заказ номер {text} удален'
-                    bot.send_message(chat_id, msg, reply_markup=admin_menu)
+                    bot.send_message(chat_id, msg)
                 else:
                     msg = '[Ошибка]: Заказа c таким номером не найдено'
                     bot.send_message(chat_id, msg)
@@ -569,7 +563,7 @@ def message_handler(message):
             if text.isdigit():
                 if delete_review(text):
                     msg = f'Отзыв номер {text} удален'
-                    bot.send_message(chat_id, msg, reply_markup=admin_menu)
+                    bot.send_message(chat_id, msg)
                 else:
                     msg = '[Ошибка]: Отзыва c таким номером не найдено'
                     bot.send_message(chat_id, msg)
@@ -729,7 +723,12 @@ def message_handler(message):
                 id = int(text)
                 if delete_coupon(id):
                     user_set_action(user_id, 'menu')
-                    bot.send_message(chat_id, f'Купон №{id} успешно удален',
+                    coupons = coupons_list()
+                    msg = f"""{coupons}
+
+--------------------------
+Купон №{id} успешно удален"""
+                    bot.send_message(chat_id, msg,
                                      reply_markup=menu_coupon)
                 else:
                     bot.send_message(chat_id, 'Купона с таким номер нет🥴')
@@ -809,13 +808,11 @@ ID: {get_user_id}
         elif action == 'send_all':
             if not check_admin(user_id):
                 return
-            file_path = 'price/send_all.txt'
+            file_path = 'documents/send_all.txt'
             write_text_file(file_path, text)
             msg = f'Проверьте правильность текста:\n\n{text}'
             bot.send_message(chat_id, msg, reply_markup=send_all_confirm)
             user_set_action(user_id, 'send_all_confirm')
-
-
 
 try:
     bot.polling(none_stop=True, interval=0, timeout=20)

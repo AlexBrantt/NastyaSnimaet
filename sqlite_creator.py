@@ -30,14 +30,27 @@ CREATE TABLE IF NOT EXISTS project (id INTEGER PRIMARY KEY AUTOINCREMENT, name T
 query1= '''
 CREATE TABLE IF NOT EXISTS coupon (id INTEGER PRIMARY KEY AUTOINCREMENT, owner TEXT NOT NULL, value TEXT);
 '''
+# ОЧИСТКА БД
+query_full_clear_db = '''
+    DELETE FROM review;
+    DELETE FROM orders;
+    DELETE FROM user;
+    DELETE FROM project;
+    DELETE FROM coupon;
+    DELETE FROM sqlite_sequence WHERE name = 'review';
+    DELETE FROM sqlite_sequence WHERE name = 'orders';
+    DELETE FROM sqlite_sequence WHERE name = 'user';
+    DELETE FROM sqlite_sequence WHERE name = 'project';
+    DELETE FROM sqlite_sequence WHERE name = 'coupon';
+'''
 
 query = '''
 INSERT INTO settings (key, value) VALUES ('autocoupon_value', '20%');
 '''
 # Применяем запросы.
-cur.execute(query)
+# cur.execute()
 #con.commit()
 # весь скрипт применить...
-# cur.executescript(''' ''')
+cur.executescript(query_full_clear_db)
 # Закрываем соединение с БД.
 con.close()
